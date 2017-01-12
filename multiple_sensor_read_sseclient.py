@@ -2,7 +2,8 @@
 # individually, we instead "subscribe" to the data that is being published
 # from the dashboard. (https://api.particle.io/v1/devices/events?access_token=a29cef4e07f57df80ddcc15fb5857e9fc5b98ce0)
 
-# Got code to print out data from user Jay L (http://stackoverflow.com/questions/29550426/how-to-parse-output-from-sse-client-in-python)
+# Got code to print out data from user Jay L
+# (http://stackoverflow.com/questions/29550426/how-to-parse-output-from-sse-client-in-python)
 
 import sseclient
 import pandas as pd
