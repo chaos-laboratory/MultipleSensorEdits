@@ -5,6 +5,9 @@
 # Got code to print out data from user Jay L
 # (http://stackoverflow.com/questions/29550426/how-to-parse-output-from-sse-client-in-python)
 
+# V1.0 by Jimmy
+# V1.5 by James C.
+
 import sseclient
 import pandas as pd
 import csv
@@ -19,13 +22,27 @@ particle_url = 'https://api.particle.io/v1/devices/events?access_token=' + acces
 starttime = datetime.datetime.now().strftime('%m_%d_%Y_%H_%M_%S')
 filename = starttime + "datalogger_test.csv"
 
-lengthofreadings = 30  # seconds
+lengthofreadings = 0  # seconds
 end = time.time() + lengthofreadings  # in seconds
 
 dataIndex = []
 nameIndex = []
 
 stopWrite = False
+
+
+def getDuration():
+    print "How long would you like to record for? (in seconds)"
+    duration = raw_input()
+    print "\n"
+    duration = int(duration)
+    return duration
+
+
+print '\nMultiple DHT22 Data Read v2\n\n'
+
+lengthofreadings = getDuration()
+end = time.time() + lengthofreadings  # in seconds
 
 messages = sseclient.SSEClient(particle_url)
 with open(filename, "a") as file:
@@ -56,4 +73,8 @@ with open(filename, "a") as file:
             print parse_data
 
         if time.time() > end:
+            print "completed " + str(lengthofreadings) + " seconds of collection."
             break
+
+
+
