@@ -7,8 +7,8 @@ import json
 import requests
 
 starttime = datetime.datetime.now().strftime('%m_%d_%Y_%H_%M_%S')
-lengthofreadings = 600  # seconds
-frequency = 5  # seconds
+lengthofreadings = 120  # seconds
+frequency = 1  # seconds
 
 print "Starting trending at " + str(starttime) + " for " + str(lengthofreadings) + " seconds at " + str(
     frequency) + " second intervals"  # logs to console

@@ -18,6 +18,9 @@ particle_url = 'https://api.particle.io/v1/devices/events?access_token=' + acces
 starttime = datetime.datetime.now().strftime('%m_%d_%Y_%H_%M_%S')
 filename = starttime + "datalogger_test.csv"
 
+lengthofreadings = 30  # seconds
+end = time.time() + lengthofreadings  # in seconds
+
 dataIndex = []
 nameIndex = []
 
@@ -50,3 +53,6 @@ with open(filename, "a") as file:
             parse_data = str(data_json['data'])
             dataIndex.append(parse_data)
             print parse_data
+
+        if time.time() > end:
+            break
