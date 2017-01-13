@@ -21,20 +21,52 @@ import particle as particle
 
 # Global definitions
 access_token = particle.access_token
-print access_token
+
 
 #  access_token = 'a29cef4e07f57df80ddcc15fb5857e9fc5b98ce0'
 particle_url = 'https://api.particle.io/v1/devices/events?access_token=' + access_token
 starttime = datetime.datetime.now().strftime('%m_%d_%Y_%H_%M_%S')
 filename = starttime + "datalogger_test.csv"
 
-lengthofreadings = 0  # seconds
+lengthofreadings = 0  # zero until user input
 end = time.time() + lengthofreadings  # in seconds
 
 dataIndex = []
 nameIndex = []
 
 stopWrite = False
+
+#  These are the users options
+functions = ["Log Data", "Check Connected Devices", "Print Outputs", "Check Claimed Devices"]
+
+
+#  Welcome User
+print '\nMultiple DHT22 Data Read v2\n'
+
+#  Get task
+def getTask():
+    print '\nWhat would you like to do?\n'
+    for index, function in enumerate(functions):
+        print str(index+1) + ". " + function
+    print "\n>>>",
+    userResponse = int(raw_input())
+
+    if userResponse == 1:
+        pass
+    elif userResponse == 2:
+        connected_devices = particle.getConnectedDevices()
+        print "\nThere are " + str(len(connected_devices)) + " connected Particles."
+        print "They are:\n"
+
+        for device in connected_devices:
+            print device["name"] + " ID: " + device["id"]
+        getTask()
+    else:
+        print "Not valid...\n"
+        getTask()
+
+getTask()
+
 
 
 def getDuration():
@@ -44,8 +76,6 @@ def getDuration():
     duration = int(duration)
     return duration
 
-
-print '\nMultiple DHT22 Data Read v2\n\n'
 
 lengthofreadings = getDuration()
 end = time.time() + lengthofreadings  # in seconds

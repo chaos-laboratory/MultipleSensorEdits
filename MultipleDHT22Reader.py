@@ -52,7 +52,7 @@ deviceConnected = False
 sensorArray = []
 index = 1  # Index counter for sensor array
 
-print 'Multiple DHT22 Data Read v1\n\n'
+print '\nMultiple DHT22 Data Read v1\n\n'
 
 print "Would you like to read all devices or just one? ('all'/'one')"
 userResponse = raw_input()

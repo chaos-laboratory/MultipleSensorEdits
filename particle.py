@@ -12,12 +12,10 @@ access_token = 'a29cef4e07f57df80ddcc15fb5857e9fc5b98ce0'
 def getConnectedDevices():
     claimedDevices = deviceAPICall()
 
-    indices = []  # will contain indices of connected Particles
     connected_devices = []  # will contain connected Particle metadata
 
     for index, device in enumerate(claimedDevices):
         if device["connected"] == True:
-            #  indices.append(index)
             connected_devices.append(device)
 
     return connected_devices
@@ -33,20 +31,6 @@ def deviceAPICall():
 def howManyClaimedDevices():
     claimedDevices = deviceAPICall()
     return len(claimedDevices)
-
-
-def getConnectedDevices():
-    claimedDevices = deviceAPICall()
-
-    indices = []  # will contain indices of connected Particles
-    connected_devices = []  # will contain connected Particle metadata
-
-    for index, device in enumerate(claimedDevices):
-        if device["connected"] == True:
-            #  indices.append(index)
-            connected_devices.append(device)
-
-    return connected_devices
 
 
 def howManyConnectedDevices():
