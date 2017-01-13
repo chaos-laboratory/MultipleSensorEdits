@@ -16,10 +16,14 @@ import json
 import time
 import datetime
 
-import particle as devices
+#  CHAOS developed script
+import particle as particle
 
 # Global definitions
-access_token = 'a29cef4e07f57df80ddcc15fb5857e9fc5b98ce0'
+access_token = particle.access_token
+print access_token
+
+#  access_token = 'a29cef4e07f57df80ddcc15fb5857e9fc5b98ce0'
 particle_url = 'https://api.particle.io/v1/devices/events?access_token=' + access_token
 starttime = datetime.datetime.now().strftime('%m_%d_%Y_%H_%M_%S')
 filename = starttime + "datalogger_test.csv"

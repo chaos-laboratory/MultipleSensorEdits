@@ -5,7 +5,22 @@ import datetime as datetime
 import time as time
 import requests
 
+# this is the only place you need to put your access token
 access_token = 'a29cef4e07f57df80ddcc15fb5857e9fc5b98ce0'
+
+
+def getConnectedDevices():
+    claimedDevices = deviceAPICall()
+
+    indices = []  # will contain indices of connected Particles
+    connected_devices = []  # will contain connected Particle metadata
+
+    for index, device in enumerate(claimedDevices):
+        if device["connected"] == True:
+            #  indices.append(index)
+            connected_devices.append(device)
+
+    return connected_devices
 
 
 def deviceAPICall():
@@ -20,18 +35,24 @@ def howManyClaimedDevices():
     return len(claimedDevices)
 
 
-def connectedDevices():
-    pass
-
-def howManyConnectedDevices():
+def getConnectedDevices():
     claimedDevices = deviceAPICall()
 
-    indices = []
+    indices = []  # will contain indices of connected Particles
+    connected_devices = []  # will contain connected Particle metadata
+
     for index, device in enumerate(claimedDevices):
         if device["connected"] == True:
-            indices.append(index)
+            #  indices.append(index)
+            connected_devices.append(device)
 
-    return len(indices)
+    return connected_devices
+
+
+def howManyConnectedDevices():
+    connected_devices = getConnectedDevices()
+
+    return len(connected_devices)
 
 
 def listConnectedDevices():
