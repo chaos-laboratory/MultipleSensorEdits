@@ -28,9 +28,9 @@ def deviceAPICall():
     return devices_req_json
 
 
-def howManyClaimedDevices():
+def ClaimedDevices():
     claimedDevices = deviceAPICall()
-    return len(claimedDevices)
+    return claimedDevices
 
 
 def howManyConnectedDevices():

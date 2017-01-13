@@ -59,8 +59,22 @@ def getTask():
         print "They are:\n"
 
         for device in connected_devices:
-            print device["name"] + " ID: " + device["id"]
+            print device["name"] + "   ID: " + device["id"]
         getTask()
+
+    elif userResponse == 4:
+        claimed_devices = particle.ClaimedDevices()
+        print "There are " + str(len(claimed_devices)) + " claimed Particles."
+        device_names = []
+        for device in claimed_devices:
+            print device["name"]
+            device_names.append(device["name"])
+        device_names = device_names.sort()
+        print device_names
+        # for name in device_names:
+        #     print name
+        getTask()
+
     else:
         print "Not valid...\n"
         getTask()
