@@ -55,13 +55,14 @@ def getTask():
         pass
     elif userResponse == 2:
         connected_devices = particle.getConnectedDevices()
-        print "\nThere are " + str(len(connected_devices)) + " connected Particles."
-        print "They are:\n"
-
-        #  sort JSON
-        sorted_devices = particle.json_sort(connected_devices, "name")
-        for device in sorted_devices:
-            print device["name"] + "   ID: " + device["id"]
+        if not connected_devices: print "There are NO connected Particles"
+        else:
+            print "\nThere are " + str(len(connected_devices)) + " connected Particles."
+            print "They are:\n"
+            #  sort JSON
+            sorted_devices = particle.json_sort(connected_devices, "name")
+            for device in sorted_devices:
+                print device["name"] + "   ID: " + device["id"]
 
         getTask()
 
@@ -79,9 +80,6 @@ def getTask():
         print "Not valid...\n"
         getTask()
 
-getTask()
-
-
 
 def getDuration():
     print "How long would you like to record for? (in seconds)"
@@ -90,6 +88,8 @@ def getDuration():
     duration = int(duration)
     return duration
 
+
+getTask()
 
 lengthofreadings = getDuration()
 end = time.time() + lengthofreadings  # in seconds
