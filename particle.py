@@ -4,9 +4,31 @@ import json
 import datetime as datetime
 import time as time
 import requests
+import sseclient
 
-# this is the only place you need to put your access token
+# this is the only place you need to put your Particle access token
 access_token = 'a29cef4e07f57df80ddcc15fb5857e9fc5b98ce0'
+
+# DEVICE API url
+deviceAPI_url = 'https://api.particle.io/v1/devices/?access_token=' + access_token
+
+# EVENTS API url
+eventsAPI_url = 'https://api.particle.io/v1/devices/events?access_token=' + access_token
+
+# File suffix
+file_suffix = "_data_log.csv"
+
+
+def deviceAPICall():
+    devices_req = requests.get(deviceAPI_url)
+    print "did we get this far?"
+    devices_req_json = devices_req.json()
+    return devices_req_json
+
+
+def ClaimedDevices():
+    claimedDevices = deviceAPICall()
+    return claimedDevices
 
 
 def getConnectedDevices():
@@ -21,35 +43,10 @@ def getConnectedDevices():
     return connected_devices
 
 
-def deviceAPICall():
-    devices_url = 'https://api.particle.io/v1/devices?access_token=' + access_token
-    devices_req = requests.get(devices_url)
-    devices_req_json = devices_req.json()
-    return devices_req_json
-
-
-def ClaimedDevices():
-    claimedDevices = deviceAPICall()
-    return claimedDevices
-
-
 def howManyConnectedDevices():
     connected_devices = getConnectedDevices()
 
     return len(connected_devices)
-
-
-def listConnectedDevices():
-    devices_url = 'https://api.particle.io/v1/devices?access_token=' + access_token
-    devices_req = requests.get(devices_url)
-    devices_req_json = devices_req.json()
-
-    indices = []
-    for index, devices_req_json in enumerate(devices_req_json):
-        if devices_req_json["connected"] == True:
-            indices.append(index)
-
-    return len(indices)
 
 
 def print_list(_list):
@@ -85,6 +82,7 @@ def list_claimed_devices():
     for device in sorted_devices:
         print device["name"] + "   ID: " + device["id"]
 
+
 def list_connected_devices():
     connected_devices = getConnectedDevices()
     if not connected_devices:
@@ -96,3 +94,56 @@ def list_connected_devices():
         sorted_devices = json_sort(connected_devices, "name")
         for device in sorted_devices:
             print device["name"] + "   ID: " + device["id"]
+
+
+def get_duration():
+    print "How long would you like to record for? (in seconds)"
+    duration = raw_input()
+    print "\n"
+    duration = int(duration)
+    return duration
+
+def stream_sse():
+    starttime = datetime.datetime.now().strftime('%m_%d_%Y_%H_%M_%S')
+    filename = starttime + file_suffix
+
+    lengthofreadings = 0  # zero until user input
+    end = time.time() + lengthofreadings  # in seconds
+
+    dataIndex = []
+    nameIndex = []
+
+    stopWrite = False
+
+    messages = sseclient.SSEClient(deviceAPI_url)
+    with open(filename, "a") as file:
+        writer = csv.writer(file, delimiter=",")
+        for msg in messages:
+
+            # prints out the event
+            event = str(msg.event)
+            # print event + str(nameIndex[0])
+            if nameIndex:
+                if event == nameIndex[0]:
+                    if stopWrite == False:  # This is so it only prints once
+                        writer.writerow(nameIndex)
+                        stopWrite = True
+                    writer.writerow(dataIndex)
+                    dataIndex = []
+
+            if event != 'message':
+                print event
+                nameIndex.append(event)
+
+            # prints out the data
+            outputMsg = msg.data
+            if type(outputMsg) is not str:
+                data_json = json.loads(outputMsg)
+                parse_data = str(data_json['data'])
+                dataIndex.append(parse_data)
+                print parse_data
+
+            if time.time() > end:
+                print "completed " + str(lengthofreadings) + " seconds of collection."
+                break
+

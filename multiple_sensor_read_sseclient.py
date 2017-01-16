@@ -8,7 +8,6 @@
 # V1.0 by Jimmy
 # V1.5 by James C.
 
-import sseclient
 import pandas as pd
 import csv
 import requests
@@ -22,8 +21,6 @@ import particle as particle
 # Global definitions
 access_token = particle.access_token
 
-
-#  access_token = 'a29cef4e07f57df80ddcc15fb5857e9fc5b98ce0'
 particle_url = 'https://api.particle.io/v1/devices/events?access_token=' + access_token
 starttime = datetime.datetime.now().strftime('%m_%d_%Y_%H_%M_%S')
 filename = starttime + "datalogger_test.csv"
@@ -52,61 +49,16 @@ def getTask():
     userResponse = int(raw_input())
 
     if userResponse == 1:
-        pass
+        particle.stream_sse()
+        getTask()
     elif userResponse == 2:
         particle.list_connected_devices()
         getTask()
-
     elif userResponse == 4:
         particle.list_claimed_devices()
         getTask()
-
     else:
         print "Not valid...\n"
         getTask()
-
-
-def getDuration():
-    print "How long would you like to record for? (in seconds)"
-    duration = raw_input()
-    print "\n"
-    duration = int(duration)
-    return duration
-
-def stream_sse():
-    lengthofreadings = getDuration()
-    end = time.time() + lengthofreadings  # in seconds
-
-    messages = sseclient.SSEClient(particle_url)
-    with open(filename, "a") as file:
-        writer = csv.writer(file, delimiter=",")
-        for msg in messages:
-
-            # prints out the event
-            event = str(msg.event)
-            # print event + str(nameIndex[0])
-            if nameIndex:
-                if event == nameIndex[0]:
-                    if stopWrite == False:  # This is so it only prints once
-                        writer.writerow(nameIndex)
-                        stopWrite = True
-                    writer.writerow(dataIndex)
-                    dataIndex = []
-
-            if event != 'message':
-                print event
-                nameIndex.append(event)
-
-            # prints out the data
-            outputMsg = msg.data
-            if type(outputMsg) is not str:
-                data_json = json.loads(outputMsg)
-                parse_data = str(data_json['data'])
-                dataIndex.append(parse_data)
-                print parse_data
-
-            if time.time() > end:
-                print "completed " + str(lengthofreadings) + " seconds of collection."
-                break
 
 getTask()
