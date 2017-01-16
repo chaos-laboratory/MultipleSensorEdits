@@ -75,3 +75,24 @@ def json_sort(_list, _key):
     keys, _list = (list(t) for t in zip(*sorted(zip(keys, _list))))
 
     return _list
+
+
+def list_claimed_devices():
+    claimed_devices = ClaimedDevices()
+    print "There are " + str(len(claimed_devices)) + " claimed Particles.\n"
+    sorted_devices = json_sort(claimed_devices, "name")
+
+    for device in sorted_devices:
+        print device["name"] + "   ID: " + device["id"]
+
+def list_connected_devices():
+    connected_devices = getConnectedDevices()
+    if not connected_devices:
+        print "There are NO connected Particles"
+    else:
+        print "\nThere are " + str(len(connected_devices)) + " connected Particles."
+        print "They are:\n"
+        #  sort JSON
+        sorted_devices = json_sort(connected_devices, "name")
+        for device in sorted_devices:
+            print device["name"] + "   ID: " + device["id"]

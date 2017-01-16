@@ -54,26 +54,11 @@ def getTask():
     if userResponse == 1:
         pass
     elif userResponse == 2:
-        connected_devices = particle.getConnectedDevices()
-        if not connected_devices: print "There are NO connected Particles"
-        else:
-            print "\nThere are " + str(len(connected_devices)) + " connected Particles."
-            print "They are:\n"
-            #  sort JSON
-            sorted_devices = particle.json_sort(connected_devices, "name")
-            for device in sorted_devices:
-                print device["name"] + "   ID: " + device["id"]
-
+        particle.list_connected_devices()
         getTask()
 
     elif userResponse == 4:
-        claimed_devices = particle.ClaimedDevices()
-        print "There are " + str(len(claimed_devices)) + " claimed Particles.\n"
-        sorted_devices = particle.json_sort(claimed_devices, "name")
-
-        for device in sorted_devices:
-            print device["name"] + "   ID: " + device["id"]
-
+        particle.list_claimed_devices()
         getTask()
 
     else:
@@ -88,43 +73,40 @@ def getDuration():
     duration = int(duration)
     return duration
 
+def stream_sse():
+    lengthofreadings = getDuration()
+    end = time.time() + lengthofreadings  # in seconds
+
+    messages = sseclient.SSEClient(particle_url)
+    with open(filename, "a") as file:
+        writer = csv.writer(file, delimiter=",")
+        for msg in messages:
+
+            # prints out the event
+            event = str(msg.event)
+            # print event + str(nameIndex[0])
+            if nameIndex:
+                if event == nameIndex[0]:
+                    if stopWrite == False:  # This is so it only prints once
+                        writer.writerow(nameIndex)
+                        stopWrite = True
+                    writer.writerow(dataIndex)
+                    dataIndex = []
+
+            if event != 'message':
+                print event
+                nameIndex.append(event)
+
+            # prints out the data
+            outputMsg = msg.data
+            if type(outputMsg) is not str:
+                data_json = json.loads(outputMsg)
+                parse_data = str(data_json['data'])
+                dataIndex.append(parse_data)
+                print parse_data
+
+            if time.time() > end:
+                print "completed " + str(lengthofreadings) + " seconds of collection."
+                break
 
 getTask()
-
-lengthofreadings = getDuration()
-end = time.time() + lengthofreadings  # in seconds
-
-messages = sseclient.SSEClient(particle_url)
-with open(filename, "a") as file:
-    writer = csv.writer(file, delimiter=",")
-    for msg in messages:
-
-        # prints out the event
-        event = str(msg.event)
-        # print event + str(nameIndex[0])
-        if nameIndex:
-            if event == nameIndex[0]:
-                if stopWrite == False:  # This is so it only prints once
-                    writer.writerow(nameIndex)
-                    stopWrite = True
-                writer.writerow(dataIndex)
-                dataIndex = []
-
-        if event != 'message':
-            print event
-            nameIndex.append(event)
-
-        # prints out the data
-        outputMsg = msg.data
-        if type(outputMsg) is not str:
-            data_json = json.loads(outputMsg)
-            parse_data = str(data_json['data'])
-            dataIndex.append(parse_data)
-            print parse_data
-
-        if time.time() > end:
-            print "completed " + str(lengthofreadings) + " seconds of collection."
-            break
-
-
-
