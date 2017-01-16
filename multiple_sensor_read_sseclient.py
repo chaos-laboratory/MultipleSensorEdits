@@ -67,17 +67,12 @@ def getTask():
 
     elif userResponse == 4:
         claimed_devices = particle.ClaimedDevices()
-        print "There are " + str(len(claimed_devices)) + " claimed Particles."
-        device_names = []
-        for device in claimed_devices:
-            print device["name"]
-            device_names.append(device["name"])
-        print sorted(device_names)
-        # device_names = device_names.sort()
-        # for device in device_names:
-        #     print device
-        # for name in device_names:
-        #     print name
+        print "There are " + str(len(claimed_devices)) + " claimed Particles.\n"
+        sorted_devices = particle.json_sort(claimed_devices, "name")
+
+        for device in sorted_devices:
+            print device["name"] + "   ID: " + device["id"]
+
         getTask()
 
     else:
