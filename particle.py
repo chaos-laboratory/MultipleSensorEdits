@@ -52,3 +52,26 @@ def listConnectedDevices():
     return len(indices)
 
 
+def print_list(_list):
+    for i in _list:
+        print i
+
+
+def truncate_strings(_strings, cut_mark):
+    truncated_strings = [string[cut_mark:] for string in _strings]
+    return truncated_strings
+
+
+def strings_to_ints(_list):
+    _list = [int(item) for item in _list]
+    return _list
+
+
+def json_sort(_list, _key):
+    # this function will sort a list of JSON using values of one key
+    keys = [item[_key] for item in _list]
+    keys = truncate_strings(keys, 8)
+    keys = strings_to_ints(keys)
+    keys, _list = (list(t) for t in zip(*sorted(zip(keys, _list))))
+
+    return _list

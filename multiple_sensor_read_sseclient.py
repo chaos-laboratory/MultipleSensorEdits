@@ -58,8 +58,11 @@ def getTask():
         print "\nThere are " + str(len(connected_devices)) + " connected Particles."
         print "They are:\n"
 
-        for device in connected_devices:
+        #  sort JSON
+        sorted_devices = particle.json_sort(connected_devices, "name")
+        for device in sorted_devices:
             print device["name"] + "   ID: " + device["id"]
+
         getTask()
 
     elif userResponse == 4:
@@ -69,8 +72,10 @@ def getTask():
         for device in claimed_devices:
             print device["name"]
             device_names.append(device["name"])
-        device_names = device_names.sort()
-        print device_names
+        print sorted(device_names)
+        # device_names = device_names.sort()
+        # for device in device_names:
+        #     print device
         # for name in device_names:
         #     print name
         getTask()
