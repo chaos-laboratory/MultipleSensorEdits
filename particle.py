@@ -151,8 +151,10 @@ def stream_sse():
     lengthofreadings = 0  # zero until user input
     frequency = 0 # in seconds
 
+    # CSV Stuff
     dataIndex = []
     nameIndex = []
+    header = ["Event","Value","ID","Location"]
 
     stopWrite = False
 
@@ -167,6 +169,8 @@ def stream_sse():
     messages = sseclient.SSEClient(eventsAPI_url)
     with open(filename, "a") as file:
         writer = csv.writer(file, delimiter=",")
+        # writes the column headers
+        writer.writerow(header)
         for msg in messages:
             # prints out the event
             event = str(msg.event)
