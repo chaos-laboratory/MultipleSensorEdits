@@ -152,6 +152,7 @@ def stream_sse():
     frequency = 0 # in seconds
 
     # CSV Stuff
+    row = []
     dataIndex = []
     nameIndex = []
     header = ["Event","Value","ID","Location"]
@@ -169,32 +170,49 @@ def stream_sse():
     messages = sseclient.SSEClient(eventsAPI_url)
     with open(filename, "a") as file:
         writer = csv.writer(file, delimiter=",")
+
+        # Generate name lookup
+        addressbook = _addressbook()
+
         # writes the column headers
         writer.writerow(header)
         for msg in messages:
-            # prints out the event
             event = str(msg.event)
-            if nameIndex:
-                if event == nameIndex[0]:
-                    if stopWrite == False:  # This is so it only prints once
-                        writer.writerow(nameIndex)
-                        stopWrite = True
-                    writer.writerow(dataIndex)
-                    dataIndex = []
 
             if event != 'message':
-                print event
-                nameIndex.append(event)
+                row.append(event)
+                data = msg.data
+                if type(unicode):
+                    data_json = json.loads(data)
+                    event_value = str(data_json['data'])
+                    row.append(event_value)
+                    print event_value
+                else:
+                    pass
+                print data
 
-            # prints out the data
-            outputMsg = msg.data
-            if type(outputMsg) is not str:
-                data_json = json.loads(outputMsg)
-                parse_data = str(data_json['data'])
-                dataIndex.append(parse_data)
-                print parse_data
+
+            # if nameIndex:
+            #     if event == nameIndex[0]:
+            #         if stopWrite == False:  # This is so it only prints once
+            #             writer.writerow(nameIndex)
+            #             stopWrite = True
+            #         writer.writerow(dataIndex)
+            #         dataIndex = []
+            #
+            #
+            # # prints out the data
+            # outputMsg = msg.data
+            # if type(outputMsg) is not str:
+            #     data_json = json.loads(outputMsg)
+            #     parse_data = str(data_json['data'])
+            #     dataIndex.append(parse_data)
+            #     print parse_data
 
             if time.time() > end:
                 print "\ncompleted " + str(lengthofreadings) + " seconds of collection."
                 break
 
+            writer.writerow(row)
+            row = []
+            event_value = ""
