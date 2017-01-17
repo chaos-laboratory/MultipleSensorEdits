@@ -149,7 +149,6 @@ def stream_sse():
 
     # how long we'll be running the collection for
     lengthofreadings = 0  # zero until user input
-    end = time.time() + lengthofreadings  # in seconds
     frequency = 0 # in seconds
 
     dataIndex = []
@@ -157,11 +156,18 @@ def stream_sse():
 
     stopWrite = False
 
+    # Generate name look up dict
+    addressbook = _addressbook()
+
+    # Ask user for length of collection
+    lengthofreadings = get_answer("\nHow long would you like to collect data for? (seconds)")
+    lengthofreadings = str_to_int(lengthofreadings)
+    end = time.time() + lengthofreadings  # in seconds
+
     messages = sseclient.SSEClient(eventsAPI_url)
     with open(filename, "a") as file:
         writer = csv.writer(file, delimiter=",")
         for msg in messages:
-
             # prints out the event
             event = str(msg.event)
             if nameIndex:
@@ -185,6 +191,6 @@ def stream_sse():
                 print parse_data
 
             if time.time() > end:
-                print "completed " + str(lengthofreadings) + " seconds of collection."
+                print "\ncompleted " + str(lengthofreadings) + " seconds of collection."
                 break
 
