@@ -45,8 +45,12 @@ def getTask():
     print '\nWhat would you like to do?\n'
     for index, function in enumerate(functions):
         print str(index+1) + ". " + function
-    print "\n>>>",
-    userResponse = int(raw_input())
+    userResponse = raw_input("\n>>>  ")
+    try:
+        userResponse = int(userResponse)
+    except ValueError:
+        print "Not valid...\n"
+        getTask()
 
     if userResponse == 1:
         particle.stream_sse()

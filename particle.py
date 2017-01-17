@@ -18,10 +18,11 @@ eventsAPI_url = 'https://api.particle.io/v1/devices/events?access_token=' + acce
 # File suffix
 file_suffix = "_data_log.csv"
 
+addressbook = {} # will house id name pairs
+
 
 def deviceAPICall():
     devices_req = requests.get(deviceAPI_url)
-    print "did we get this far?"
     devices_req_json = devices_req.json()
     return devices_req_json
 
@@ -96,6 +97,10 @@ def list_connected_devices():
             print device["name"] + "   ID: " + device["id"]
 
 
+#   ***
+#   SSE client functions begin here!
+
+
 def get_duration():
     print "How long would you like to record for? (in seconds)"
     duration = raw_input()
@@ -103,26 +108,62 @@ def get_duration():
     duration = int(duration)
     return duration
 
+def get_answer(question):
+    print question
+    answer = raw_input("\n>>>  ")
+    return answer
+
+def str_to_int(variable):
+    try:
+        variable = int(variable)
+    except ValueError:
+        print "Not valid...\n"
+        variable = -1
+    return variable
+
+def _addressbook():
+
+    devices = getConnectedDevices()
+    for device in devices:
+        addressbook[device["id"]] = device["name"]
+    return addressbook
+
+
+def update_addressbook():
+    devices = getConnectedDevices()
+    len_at_start = len(addressbook)
+    len_at_end = len(addressbook)
+    for device in devices:
+        if device["id"] not in addressbook:
+            addressbook[device["id"]] = device["name"]
+    len_at_end = len(addressbook)
+    if len_at_end != len_at_start:
+        print "\nAdded " + str(len_at_end - len_at_start) + " device(s)!"
+
+
+#   this method is the model for option 1
 def stream_sse():
+    # generates file name
     starttime = datetime.datetime.now().strftime('%m_%d_%Y_%H_%M_%S')
     filename = starttime + file_suffix
 
+    # how long we'll be running the collection for
     lengthofreadings = 0  # zero until user input
     end = time.time() + lengthofreadings  # in seconds
+    frequency = 0 # in seconds
 
     dataIndex = []
     nameIndex = []
 
     stopWrite = False
 
-    messages = sseclient.SSEClient(deviceAPI_url)
+    messages = sseclient.SSEClient(eventsAPI_url)
     with open(filename, "a") as file:
         writer = csv.writer(file, delimiter=",")
         for msg in messages:
 
             # prints out the event
             event = str(msg.event)
-            # print event + str(nameIndex[0])
             if nameIndex:
                 if event == nameIndex[0]:
                     if stopWrite == False:  # This is so it only prints once
