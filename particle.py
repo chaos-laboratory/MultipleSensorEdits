@@ -9,7 +9,7 @@ import sseclient
 # this is the only place you need to put your Particle access token
 access_token = 'a29cef4e07f57df80ddcc15fb5857e9fc5b98ce0'
 
-# DEVICE API url
+# DEVICES API url
 deviceAPI_url = 'https://api.particle.io/v1/devices/?access_token=' + access_token
 
 # EVENTS API url
@@ -49,6 +49,19 @@ def howManyConnectedDevices():
 
     return len(connected_devices)
 
+
+def get_core_url(coreID):
+    URL = "https://api.particle.io/v1/devices/" + coreID + "/?access_token=" + access_token
+    return URL
+
+def get_var_url(coreID, var):
+    URL = "https://api.particle.io/v1/devices/" + coreID + "/" + var + "/?access_token=" + access_token
+    return URL
+
+def url_json(url):
+    req = requests.get(url)
+    json = req.json()
+    return json
 
 def print_list(_list):
     for i in _list:
@@ -121,13 +134,63 @@ def str_to_int(variable):
         variable = -1
     return variable
 
-def _addressbook():
 
+def get_locations():
+    numErrors = 0
+    for address in addressbook:
+        json = url_json(get_core_url(address))
+        print json
+
+        try:
+            if json["variables"] is not None:
+                if json["variables"].has_key("location"):
+                    json = url_json(get_var_url(address,"location"))
+                    print json["result"]
+            #     json = url_json(get_var_url(address,"location"))
+            else:
+                print "no variables!"
+        except AttributeError:
+            print "Attribute Error!! Check out: " + str(get_core_url(address))
+            numErrors += 1
+        except KeyError:
+            print "Key Error!! Check out: " + str(get_core_url(address))
+            numErrors += 1
+
+def add_locations():
+    numErrors = 0
+    for address in addressbook:
+        json = url_json(get_core_url(address))
+        print json
+        try:
+            if json["variables"] is not None:
+                if json["variables"].has_key("location"):
+                    json = url_json(get_var_url(address,"location"))
+                    addressbook[address]["location"] = json["result"]
+                    print json["result"]
+            #     json = url_json(get_var_url(address,"location"))
+            else:
+                print "no variables!"
+        except AttributeError:
+            print "Attribute Error!! Check out: " + str(get_core_url(address))
+            numErrors += 1
+            addressbook[address]["location"] = json["ERROR"]
+        except KeyError:
+            print "Key Error!! Check out: " + str(get_core_url(address))
+            numErrors += 1
+            addressbook[address]["location"] = json["ERROR"]
+    print "\n\nGot " + str(numErrors) +  " errors!"
+
+
+def _addressbook():
+    print "\nGenerating addressbook..."
     devices = getConnectedDevices()
     for device in devices:
-        addressbook[device["id"]] = device["name"]
+        addressbook[device["id"]] = {}
+        addressbook[device["id"]]["name"] = device["name"]
+        addressbook[device["id"]]["location"] = "none"
+    #get_locations()
+    print "\nDone!"
     return addressbook
-
 
 def update_addressbook():
     devices = getConnectedDevices()
@@ -139,6 +202,7 @@ def update_addressbook():
     len_at_end = len(addressbook)
     if len_at_end != len_at_start:
         print "\nAdded " + str(len_at_end - len_at_start) + " device(s)!"
+
 
 
 #   this method is the model for option 1
@@ -159,13 +223,13 @@ def stream_sse():
 
     stopWrite = False
 
-    # Generate name look up dict
-    addressbook = _addressbook()
-
     # Ask user for length of collection
     lengthofreadings = get_answer("\nHow long would you like to collect data for? (seconds)")
     lengthofreadings = str_to_int(lengthofreadings)
     end = time.time() + lengthofreadings  # in seconds
+
+    # Generate name look up dict
+    addressbook = _addressbook()
 
     messages = sseclient.SSEClient(eventsAPI_url)
     with open(filename, "a") as file:
@@ -186,6 +250,7 @@ def stream_sse():
                     data_json = json.loads(data)
                     event_value = str(data_json['data'])
                     row.append(event_value)
+                    row.append(addressbook[data_json['coreid']])
                     print event_value
                 else:
                     pass
@@ -209,6 +274,10 @@ def stream_sse():
             #     dataIndex.append(parse_data)
             #     print parse_data
 
+            # event: humidity
+            # data: {"data": "41.099998", "ttl": "60", "published_at": "2017-01-16T20:07:41.122Z",
+            #        "coreid": "3c002f001747353236343033"}
+
             if time.time() > end:
                 print "\ncompleted " + str(lengthofreadings) + " seconds of collection."
                 break
@@ -216,3 +285,5 @@ def stream_sse():
             writer.writerow(row)
             row = []
             event_value = ""
+
+_addressbook()
