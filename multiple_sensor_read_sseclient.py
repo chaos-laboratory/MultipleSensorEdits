@@ -34,7 +34,7 @@ nameIndex = []
 stopWrite = False
 
 #  These are the users options
-functions = ["Log Data", "Check Connected Devices", "Print Outputs", "Check Claimed Devices"]
+functions = ["Log Data", "Check Connected Devices", "Print Outputs", "Check Claimed Devices", "Update Addressbook"]
 
 
 #  Welcome User
@@ -79,8 +79,15 @@ def getTask():
         except:
             print "error"
         getTask()
+
+    elif userResponse == 5:
+        particle._addressbook()
+        getTask()
+
+
     else:
         print "Not valid...\n"
         getTask()
+
 
 getTask()

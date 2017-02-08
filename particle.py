@@ -200,7 +200,7 @@ def add_missing_address(coreid):
 
 
 
-def print_sse(location = "Archlab", duration = 60):
+def print_sse(location = "Arc", duration = 60):
     time_to_end = time.time() + duration
     client = None
     client = sseclient.SSEClient(eventsAPI_url)
@@ -212,15 +212,15 @@ def print_sse(location = "Archlab", duration = 60):
                 try:
                     if event.event is not 'spark/status':
                         outputJS = json.loads(data)
-                        if addressbook[outputJS["coreid"]]["location"] == location:
+                        if location in addressbook[outputJS["coreid"]]["location"]:
                             print addressbook[outputJS["coreid"]]['name'], event.event, outputJS['data'], datetime.datetime.now().isoformat()
                 except KeyError:
                     add_missing_address(outputJS["coreid"])
-                    if addressbook[outputJS["coreid"]]["location"] == location:
+                    if location in addressbook[outputJS["coreid"]]["location"]:
                         print addressbook[outputJS["coreid"]]['name'], event.event, outputJS[
                             'data'], datetime.datetime.now().isoformat()
 
-def save_sse(location = "Archlab", duration = 60):
+def save_sse(location = "Arc", duration = 60):
     starttime = datetime.datetime.now().strftime('%m_%d_%Y_%H_%M_%S')
     filename = starttime + file_suffix
     time_to_end = time.time() + duration
@@ -240,7 +240,7 @@ def save_sse(location = "Archlab", duration = 60):
                 try:
                     if event.event is not 'spark/status':
                         outputJS = json.loads(data)
-                        if addressbook[outputJS["coreid"]]["location"] == location:
+                        if location in addressbook[outputJS["coreid"]]["location"]:
                             row.append(datetime.datetime.now().isoformat())
                             row.append(event.event)
                             row.append(outputJS['data'])
@@ -249,7 +249,7 @@ def save_sse(location = "Archlab", duration = 60):
                             print datetime.datetime.now().isoformat(), event.event, outputJS['data'], addressbook[outputJS["coreid"]]['name']
                 except KeyError:
                     add_missing_address(outputJS["coreid"])
-                    if addressbook[outputJS["coreid"]]["location"] == location:
+                    if location in addressbook[outputJS["coreid"]]["location"]:
                         row.append(datetime.datetime.now().isoformat())
                         row.append(event.event)
                         row.append(outputJS['data'])
@@ -295,7 +295,7 @@ def stream_sse():
         # writes the column headers
         writer.writerow(header)
         for msg in messages:
-            event = str(msg.event)
+            event = (msg.event).encode(encoding='utf-8')
 
             if event != 'message':
                 row.append(datetime.datetime.now().strftime('%m_%d_%Y_%H:%M:%S'))
