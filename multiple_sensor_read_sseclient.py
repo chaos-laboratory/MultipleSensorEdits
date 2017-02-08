@@ -40,6 +40,10 @@ functions = ["Log Data", "Check Connected Devices", "Print Outputs", "Check Clai
 #  Welcome User
 print '\nMultiple DHT22 Data Read v2\n'
 
+def getInput(prompt):
+    print prompt
+    return raw_input("\n>>>  ")
+
 #  Get task
 def getTask():
     print '\nWhat would you like to do?\n'
@@ -58,8 +62,19 @@ def getTask():
     elif userResponse == 2:
         particle.list_connected_devices()
         getTask()
+    elif userResponse == 3:
+        location = getInput("What location? (*) for all locations:")
+        duration = int(getInput("For how long (in seconds)?:"))
+
+        particle.print_sse(location, duration)
+
+        getTask()
+
     elif userResponse == 4:
-        particle.list_claimed_devices()
+        try:
+            particle.list_claimed_devices()
+        except:
+            print "error"
         getTask()
     else:
         print "Not valid...\n"

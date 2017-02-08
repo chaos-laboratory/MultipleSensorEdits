@@ -14,7 +14,7 @@ deviceAPI_url = 'https://api.particle.io/v1/devices/?access_token=' + access_tok
 
 # EVENTS API url
 eventsAPI_url = 'https://api.particle.io/v1/devices/events?access_token=' + access_token
-
+# https://api.particle.io/v1/devices/events?access_token=a29cef4e07f57df80ddcc15fb5857e9fc5b98ce0
 # File suffix
 file_suffix = "_data_log.csv"
 
@@ -107,7 +107,7 @@ def list_connected_devices():
         #  sort JSON
         sorted_devices = json_sort(connected_devices, "name")
         for device in sorted_devices:
-            print device["name"] + "   ID: " + device["id"]
+            print device["name"] + "   ID: " + device["id"] + "   Location: " + addressbook[device["id"]]["location"]
 
 
 #   ***
@@ -135,32 +135,11 @@ def str_to_int(variable):
     return variable
 
 
-def get_locations():
-    numErrors = 0
-    for address in addressbook:
-        json = url_json(get_core_url(address))
-        print json
-
-        try:
-            if json["variables"] is not None:
-                if json["variables"].has_key("location"):
-                    json = url_json(get_var_url(address,"location"))
-                    print json["result"]
-            #     json = url_json(get_var_url(address,"location"))
-            else:
-                print "no variables!"
-        except AttributeError:
-            print "Attribute Error!! Check out: " + str(get_core_url(address))
-            numErrors += 1
-        except KeyError:
-            print "Key Error!! Check out: " + str(get_core_url(address))
-            numErrors += 1
-
 def add_locations():
     numErrors = 0
     for address in addressbook:
         json = url_json(get_core_url(address))
-        print json
+        # print json
         try:
             if json["variables"] is not None:
                 if json["variables"].has_key("location"):
@@ -169,15 +148,16 @@ def add_locations():
                     print json["result"]
             #     json = url_json(get_var_url(address,"location"))
             else:
+                addressbook[address]["location"] = "unknown"
                 print "no variables!"
         except AttributeError:
             print "Attribute Error!! Check out: " + str(get_core_url(address))
             numErrors += 1
-            addressbook[address]["location"] = json["ERROR"]
+            addressbook[address]["location"] = 'unknown'
         except KeyError:
             print "Key Error!! Check out: " + str(get_core_url(address))
             numErrors += 1
-            addressbook[address]["location"] = json["ERROR"]
+            addressbook[address]["location"] = "unknown"
     print "\n\nGot " + str(numErrors) +  " errors!"
 
 
@@ -188,7 +168,8 @@ def _addressbook():
         addressbook[device["id"]] = {}
         addressbook[device["id"]]["name"] = device["name"]
         addressbook[device["id"]]["location"] = "none"
-    #get_locations()
+    # get_locations()
+    add_locations()
     print "\nDone!"
     return addressbook
 
@@ -204,6 +185,59 @@ def update_addressbook():
         print "\nAdded " + str(len_at_end - len_at_start) + " device(s)!"
 
 
+def add_missing_address(coreid):
+    var = "location"
+    addressbook[id] = {}
+    json = url_json(get_core_url(coreid))
+    if "variables" in json:
+        if var in json["variables"]:
+            addressbook[coreid] = {}
+            addressbook[coreid]["name"] = json["name"]
+            addressbook[coreid]["location"] = url_json(get_var_url(coreid, var))['result']
+
+            print json["name"], "at", addressbook[coreid]["location"]
+
+
+
+def print_sse(location = "Archlab", duration = 60):
+    time_to_end = time.time() + duration
+    client = None
+    client = sseclient.SSEClient(eventsAPI_url)
+    for event in client:
+        if time.time() > time_to_end:
+            break
+        data = event.data
+        if type(data) is not str:
+                try:
+                    if event.event is not 'spark/status':
+                        outputJS = json.loads(data)
+                        if addressbook[outputJS["coreid"]]["location"] == location:
+                            print addressbook[outputJS["coreid"]]['name'], event.event, outputJS['data'], datetime.datetime.now().isoformat()
+                except KeyError:
+                    add_missing_address(outputJS["coreid"])
+                    if addressbook[outputJS["coreid"]]["location"] == location:
+                        print addressbook[outputJS["coreid"]]['name'], event.event, outputJS[
+                            'data'], datetime.datetime.now().isoformat()
+
+
+            # print outputJS
+            # print( FilterName, outputJS[FilterName] )
+            # print(outputJS[FilterName])
+    # messages = None
+    # messages = sseclient.SSEClient(eventsAPI_url)
+    #
+    # locationbook = [page for page in addressbook if addressbook[page]["location"] == location]
+    #
+    # time_to_end = time.time() + duration
+    # for msg in messages:
+    #     if time.time() > time_to_end:
+    #         break
+    #     if msg.event != "spark/status":
+    #         # jmsg = json.loads(str(msg.data))
+    #         # if msg.data["coreid"] in locationbook:
+    #         _str = str(msg.data)
+    #         print _str
+    #         # print jmsg
 
 #   this method is the model for option 1
 def stream_sse():
@@ -219,7 +253,7 @@ def stream_sse():
     row = []
     dataIndex = []
     nameIndex = []
-    header = ["Event","Value","ID","Location"]
+    header = ["Time","Event","Value","ID","Location"]
 
     stopWrite = False
 
@@ -229,14 +263,14 @@ def stream_sse():
     end = time.time() + lengthofreadings  # in seconds
 
     # Generate name look up dict
-    addressbook = _addressbook()
+    # addressbook = _addressbook()
 
     messages = sseclient.SSEClient(eventsAPI_url)
     with open(filename, "a") as file:
         writer = csv.writer(file, delimiter=",")
 
         # Generate name lookup
-        addressbook = _addressbook()
+        # addressbook = _addressbook()
 
         # writes the column headers
         writer.writerow(header)
@@ -244,13 +278,15 @@ def stream_sse():
             event = str(msg.event)
 
             if event != 'message':
+                row.append(datetime.datetime.now().strftime('%m_%d_%Y_%H:%M:%S'))
                 row.append(event)
                 data = msg.data
                 if type(unicode):
                     data_json = json.loads(data)
                     event_value = str(data_json['data'])
                     row.append(event_value)
-                    row.append(addressbook[data_json['coreid']])
+                    row.append(addressbook[data_json['coreid']]['name'])
+                    row.append(addressbook[data_json['coreid']]['location'])
                     print event_value
                 else:
                     pass
