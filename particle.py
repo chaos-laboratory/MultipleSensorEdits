@@ -17,6 +17,7 @@ eventsAPI_url = 'https://api.particle.io/v1/devices/events?access_token=' + acce
 # https://api.particle.io/v1/devices/events?access_token=a29cef4e07f57df80ddcc15fb5857e9fc5b98ce0
 # File suffix
 file_suffix = "_data_log.csv"
+header = ["Time", "Event", "Value", "ID"]
 
 addressbook = {} # will house id name pairs
 
@@ -195,7 +196,7 @@ def add_missing_address(coreid):
             addressbook[coreid]["name"] = json["name"]
             addressbook[coreid]["location"] = url_json(get_var_url(coreid, var))['result']
 
-            print json["name"], "at", addressbook[coreid]["location"]
+            print json["name"], "at", addressbook[coreid]["location"], " added!"
 
 
 
@@ -219,27 +220,46 @@ def print_sse(location = "Archlab", duration = 60):
                         print addressbook[outputJS["coreid"]]['name'], event.event, outputJS[
                             'data'], datetime.datetime.now().isoformat()
 
+def save_sse(location = "Archlab", duration = 60):
+    starttime = datetime.datetime.now().strftime('%m_%d_%Y_%H_%M_%S')
+    filename = starttime + file_suffix
+    time_to_end = time.time() + duration
 
-            # print outputJS
-            # print( FilterName, outputJS[FilterName] )
-            # print(outputJS[FilterName])
-    # messages = None
-    # messages = sseclient.SSEClient(eventsAPI_url)
-    #
-    # locationbook = [page for page in addressbook if addressbook[page]["location"] == location]
-    #
-    # time_to_end = time.time() + duration
-    # for msg in messages:
-    #     if time.time() > time_to_end:
-    #         break
-    #     if msg.event != "spark/status":
-    #         # jmsg = json.loads(str(msg.data))
-    #         # if msg.data["coreid"] in locationbook:
-    #         _str = str(msg.data)
-    #         print _str
-    #         # print jmsg
+    with open(filename, "a") as file:
+        print "Beginning collection for " + str(duration) + " seconds."
+        writer = csv.writer(file, delimiter=",")
+        writer.writerow(header)
 
-#   this method is the model for option 1
+        # Begin SSE client
+        client = sseclient.SSEClient(eventsAPI_url)
+        for event in client:
+            if time.time() > time_to_end:
+                break
+            data = event.data
+            if type(data) is not str:
+                try:
+                    if event.event is not 'spark/status':
+                        outputJS = json.loads(data)
+                        if addressbook[outputJS["coreid"]]["location"] == location:
+                            row.append(datetime.datetime.now().isoformat())
+                            row.append(event.event)
+                            row.append(outputJS['data'])
+                            row.append(addressbook[outputJS["coreid"]]['name'])
+                            writer.writerow(row)
+                            print datetime.datetime.now().isoformat(), event.event, outputJS['data'], addressbook[outputJS["coreid"]]['name']
+                except KeyError:
+                    add_missing_address(outputJS["coreid"])
+                    if addressbook[outputJS["coreid"]]["location"] == location:
+                        row.append(datetime.datetime.now().isoformat())
+                        row.append(event.event)
+                        row.append(outputJS['data'])
+                        row.append(addressbook[outputJS["coreid"]]['name'])
+                        writer.writerow(row)
+                        print datetime.datetime.now().isoformat(), event.event, outputJS['data'], addressbook[outputJS["coreid"]]['name']
+            row = []
+    print "\ncompleted " + str(duration) + " seconds of collection."
+
+
 def stream_sse():
     # generates file name
     starttime = datetime.datetime.now().strftime('%m_%d_%Y_%H_%M_%S')

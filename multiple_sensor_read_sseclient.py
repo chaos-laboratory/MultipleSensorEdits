@@ -57,7 +57,10 @@ def getTask():
         getTask()
 
     if userResponse == 1:
-        particle.stream_sse()
+        location = getInput("What location? (*) for all locations:")
+        duration = int(getInput("For how long (in seconds)?:"))
+
+        particle.save_sse(location, duration)
         getTask()
     elif userResponse == 2:
         particle.list_connected_devices()
